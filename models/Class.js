@@ -15,6 +15,10 @@ const classSchema = new Schema(
       required: true,
       unique: true,
     },
+    location: {
+      type: String,
+      unique: true,
+    },
   },
   { timestamps: true }
 );

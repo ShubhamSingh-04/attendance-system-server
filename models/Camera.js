@@ -18,6 +18,11 @@ const cameraSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Class',
     },
+    cameraAccessLink: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
   { timestamps: true }
 );

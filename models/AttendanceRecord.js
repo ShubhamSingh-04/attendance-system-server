@@ -14,7 +14,7 @@ const attendanceRecordSchema = new Schema(
       ref: 'Subject',
       required: true,
     },
-    teacher: {
+    markedBy: {
       type: Schema.Types.ObjectId,
       ref: 'Teacher',
       required: true,
