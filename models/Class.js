@@ -15,6 +15,9 @@ const classSchema = new Schema(
       required: true,
       unique: true,
     },
+    semester: {
+      type: String,
+    },
     location: {
       type: String,
       unique: true,

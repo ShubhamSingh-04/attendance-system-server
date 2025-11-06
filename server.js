@@ -8,8 +8,9 @@ import path from 'path';
 import connectDB from './config/db.js';
 
 // routes
-import teacherRoutes from './routes/teacher.route.js';
-import authRoutes from './routes/auth.route.js';
+import teacherRoutes from './routes/teacherRoute.js';
+import authRoutes from './routes/authRoute.js';
+import adminRoutes from './routes/adminRoute.js';
 
 // Initialize Express app
 const app = express();
@@ -47,30 +48,48 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// routes
-app.use('/api/teacher', teacherRoutes);
-app.use('/api/auth', authRoutes);
-
-// --------------------------
 // Sample route
-// --------------------------
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Server is running!' });
 });
 
-// Example API route
-app.post('/api/test', (req, res) => {
-  const { name, usn } = req.body;
-  res.status(200).json({ message: `Received data for ${name} (${usn})` });
+// routes
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/auth', authRoutes);
+
+// 404 Not Found Handler
+// This catches any request that doesn't match a route
+app.use((req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  res.status(404);
+  next(error); // Pass the error to the next handler
 });
 
-// --------------------------
+// General Error Handler
+// This is where your 'throw new Error()' will end up!
+app.use((err, req, res, next) => {
+  // Check for Mongoose bad ObjectId
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    return res.status(400).json({ message: 'Resource not found. Invalid ID.' });
+  }
+
+  // Determine the status code
+  // If the error has a res.statusCode (like from res.status(403)), use it
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    // Only include the stack trace in development mode
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+});
+
 // Start server
-// --------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   // Connect to MongoDB
   await connectDB();
 
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
