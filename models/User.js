@@ -10,13 +10,13 @@ const userSchema = new Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
       trim: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
       trim: true,
       lowercase: true,
     },
@@ -27,7 +27,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'teacher', 'student'],
+      enum: ['Admin', 'Teacher', 'Student'],
       required: true,
     },
     // This links the user account to their specific profile (Student or Teacher)
@@ -68,5 +68,8 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   // bcrypt.compare will securely compare the plain-text password with the hash
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ email: 1 }, { unique: true });
 
 export const User = model('User', userSchema);

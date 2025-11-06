@@ -9,6 +9,9 @@ router.use(protectMiddleware.protect);
  * @route   GET /get-camera-pic
  * @desc    Fetches a single snapshot from the IP camera
  */
-router.get('/get-camera-pic', teacherController.getCameraPic);
+router.get(
+  '/mark-attendance/:classCode/:subjectCode',
+  teacherController.markAttendance
+);
 
 export default router;

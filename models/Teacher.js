@@ -27,8 +27,22 @@ const teacherSchema = new Schema(
         ref: 'Subject',
       },
     ],
+
+    assignedClasses: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Class',
+      },
+    ],
   },
   { timestamps: true }
 );
+
+// --- Indexes ---
+teacherSchema.index({ user: 1 }, { unique: true });
+teacherSchema.index({ teacherID: 1 }, { unique: true });
+teacherSchema.index({ name: 1 });
+teacherSchema.index({ subjects: 1 });
+teacherSchema.index({ assignedClasses: 1 });
 
 export const Teacher = model('Teacher', teacherSchema);

@@ -9,7 +9,7 @@ const studentSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true,
+      // unique: true,
     },
     name: {
       type: String,
@@ -49,5 +49,13 @@ const studentSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// --- Indexes ---
+studentSchema.index({ user: 1 }, { unique: true });
+studentSchema.index({ rollNo: 1 }, { unique: true });
+studentSchema.index({ class: 1 });
+studentSchema.index({ semester: 1 });
+studentSchema.index({ enrolledSubjects: 1 });
+studentSchema.index({ name: 1 });
 
 export const Student = model('Student', studentSchema);

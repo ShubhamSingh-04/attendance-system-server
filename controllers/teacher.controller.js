@@ -5,7 +5,7 @@ import cameraService from '../services/camera.service.js';
  * It calls the service to get the image stream and
  * pipes it to the response. It also handles error formatting.
  */
-const getCameraPic = async (req, res) => {
+const markAttendance = async (req, res) => {
   try {
     const CAMERA_URL = 'http://192.168.1.3:8080/shot.jpg';
     const imageStream = await cameraService.fetchCameraImage(CAMERA_URL);
@@ -43,5 +43,5 @@ const getCameraPic = async (req, res) => {
 };
 
 export default {
-  getCameraPic,
+  markAttendance,
 };

@@ -10,7 +10,7 @@ const classSchema = new Schema(
       unique: true,
     },
     // e.g., "CS", "EC"
-    shortCode: {
+    classCode: {
       type: String,
       required: true,
       unique: true,
