@@ -9,6 +9,7 @@ import { User } from '../models/User.js';
  * If invalid or missing, it returns a 401 Unauthorized error.
  */
 const protect = asyncHandler(async (req, res, next) => {
+  // console.log('Protect');
   let token;
 
   // Check for the 'Authorization' header and if it starts with 'Bearer'
@@ -26,6 +27,7 @@ const protect = asyncHandler(async (req, res, next) => {
       // Find the user by the ID stored in the token
       // and attach it to the request object (excluding the password)
       req.user = await User.findById(decoded.id).select('-password');
+      // console.log('Protect: ', req.user);
 
       if (!req.user) {
         res.status(401);

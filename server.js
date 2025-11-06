@@ -22,10 +22,7 @@ await dotenv.config();
 app.use(express.json());
 app.use(cors());
 
-// --------------------------
 // Setup logging
-// --------------------------
-
 // Ensure logs folder exists
 const logDir = path.join('./logs');
 if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
@@ -49,13 +46,14 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Sample route
-app.get('/', (req, res) => {
+app.get('/test', (req, res) => {
   res.status(200).json({ message: 'Server is running!' });
 });
 
 // routes
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Not Found Handler
 // This catches any request that doesn't match a route

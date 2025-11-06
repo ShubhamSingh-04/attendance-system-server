@@ -16,7 +16,10 @@ const classSchema = new Schema(
       unique: true,
     },
     semester: {
-      type: String,
+      type: Number,
+      required: true,
+      min: 1,
+      max: 8,
     },
     location: {
       type: String,

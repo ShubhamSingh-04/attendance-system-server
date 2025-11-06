@@ -2,4 +2,3 @@ node_modules
 .env
 logs
 uploads
-dev_scripts
