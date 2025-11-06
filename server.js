@@ -2,21 +2,24 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import connectDB from './config/db.js';
 
-// Load environment variables
-dotenv.config();
-
-// Connect to MongoDB
-connectDB();
+// routes
+import teacherRoutes from './routes/teacher.route.js';
+import authRoutes from './routes/auth.route.js';
 
 // Initialize Express app
 const app = express();
 
+// Load environment variables
+await dotenv.config();
+
 // Middleware: parse JSON requests
 app.use(express.json());
+app.use(cors());
 
 // --------------------------
 // Setup logging
@@ -44,6 +47,10 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// routes
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/auth', authRoutes);
+
 // --------------------------
 // Sample route
 // --------------------------
@@ -61,4 +68,9 @@ app.post('/api/test', (req, res) => {
 // Start server
 // --------------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, async () => {
+  // Connect to MongoDB
+  await connectDB();
+
+  console.log(`🚀 Server running on port ${PORT}`);
+});
