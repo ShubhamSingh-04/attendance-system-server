@@ -94,4 +94,29 @@ router.post('/subjects', adminController.addSubject);
  */
 router.delete('/subjects/:id', adminController.deleteSubject);
 
+/*
+ * @desc    Get all classes
+ * @route   GET /api/admin/classes
+ * @access  Private/Admin
+ */
+
+// -----------------------------------------
+
+// ------------- CLASSES -------------------
+router.get('/class', adminController.getAllClasses);
+
+/*
+ * @desc    Add a new class
+ * @route   POST /api/admin/classes
+ * @access  Private/Admin
+ */
+router.post('/class', adminController.addClass);
+
+/*
+ * @desc    Delete a class by ID
+ * @route   DELETE /api/admin/classes/:id
+ * @access  Private/Admin
+ */
+router.delete('/class/:id', adminController.deleteClass);
+
 export default router;

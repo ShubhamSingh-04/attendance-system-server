@@ -1,6 +1,7 @@
 import { adminService } from '../services/adminService.js';
 import { roomService } from '../services/roomService.js';
 import subjectService from '../services/subjectService.js';
+import classService from '../services/classService.js';
 import mongoose from 'mongoose';
 
 // =================================================================
@@ -358,6 +359,82 @@ const deleteSubject = async (req, res) => {
   }
 };
 
+// =================================================================
+// --- CLASS CONTROLLERS ---
+// =================================================================
+
+/**
+ * @desc    Get all classes
+ * @route   GET /api/admin/classes
+ * @access  Private/Admin
+ */
+export const getAllClasses = async (req, res) => {
+  try {
+    const classes = await classService.getAllClasses();
+    res.status(200).json({
+      noOfClasses: classes.length,
+      classes,
+    });
+  } catch (error) {
+    console.error('getAllClasses controller error:', error);
+    res.status(500).json({ message: 'Server error while fetching classes.' });
+  }
+};
+
+/**
+ * @desc    Add a new class
+ * @route   POST /api/admin/classes
+ * @access  Private/Admin
+ */
+export const addClass = async (req, res) => {
+  try {
+    const newClass = await classService.addClass(req.body);
+    res.status(201).json(newClass);
+  } catch (error) {
+    // Handle specific errors from the service
+    if (error.message.includes('already exists')) {
+      return res.status(409).json({ message: error.message });
+    }
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+
+    console.error('addClass controller error:', error);
+    res.status(500).json({ message: 'Server error while adding class.' });
+  }
+};
+
+/**
+ * @desc    Delete a class
+ * @route   DELETE /api/admin/classes/:id
+ * @access  Private/Admin
+ */
+export const deleteClass = async (req, res) => {
+  const { id } = req.params;
+
+  // Check for valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid class ID format.' });
+  }
+
+  try {
+    const result = await classService.deleteClass(id);
+    res.status(200).json(result);
+  } catch (error) {
+    if (error.message.startsWith('Class not found')) {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message.startsWith('Cannot delete class')) {
+      // This is the custom error from our service
+      return res.status(400).json({ message: error.message });
+    }
+
+    console.error('deleteClass controller error:', error);
+    res.status(500).json({ message: 'Server error while deleting class.' });
+  }
+};
+
 export const adminController = {
   getAllTeachers,
   addTeacher,
@@ -370,4 +447,7 @@ export const adminController = {
   deleteSubject,
   addSubject,
   getAllSubjects,
+  deleteClass,
+  getAllClasses,
+  addClass,
 };
