@@ -19,12 +19,6 @@ const subjectSchema = new Schema(
       ref: 'Class',
       required: true,
     },
-    semester: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 8,
-    },
   },
   { timestamps: true }
 );

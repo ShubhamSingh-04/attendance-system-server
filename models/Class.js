@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
-// Represents a department or class (e.g., "Computer Science", "Electronics")
+// Represents a department or class (e.g., "Computer Science")
 const classSchema = new Schema(
   {
     name: {
@@ -9,7 +9,6 @@ const classSchema = new Schema(
       required: true,
       unique: true,
     },
-    // e.g., "CS", "EC"
     classCode: {
       type: String,
       required: true,
@@ -17,13 +16,8 @@ const classSchema = new Schema(
     },
     semester: {
       type: Number,
-      required: true,
       min: 1,
       max: 8,
-    },
-    location: {
-      type: String,
-      unique: true,
     },
   },
   { timestamps: true }

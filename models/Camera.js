@@ -9,14 +9,11 @@ const cameraSchema = new Schema(
       required: true,
       unique: true,
     },
-    // Location or name (e.g., "Room 501", "CS Lab")
-    location: {
-      type: String,
-    },
-    // The class that this camera is assigned to
-    assignedClass: {
+    // Add a reference to the Location collection
+    room: {
       type: Schema.Types.ObjectId,
-      ref: 'Class',
+      ref: 'Room',
+      required: true, // A camera must be in a location
     },
     cameraAccessLink: {
       type: String,
@@ -27,4 +24,6 @@ const cameraSchema = new Schema(
   { timestamps: true }
 );
 
+// cameraSchema.index({ cameraId: 1 });
+cameraSchema.index({ room: 1 });
 export const Camera = model('Camera', cameraSchema);
