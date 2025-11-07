@@ -10,6 +10,7 @@ router.use(roleMiddleware.isAdmin);
 
 router.get('/me', userController.getSelfProfile);
 
+// --------------- TEACHER ---------------------------
 /**
  * @desc    Get all teachers
  * @route   GET /teachers
@@ -36,7 +37,61 @@ router.put('/teachers/:id', adminController.editTeacher);
  * @route   DELETE /teachers/:id
  * @access  Private/Admin
  */
-// --- ADD THIS ROUTE ---
+
 router.delete('/teachers/:id', adminController.deleteTeacher);
+/**
+ * @desc    Get all rooms (and their cameras)
+ * @route   GET /api/admin/rooms
+ * @access  Private/Admin
+ */
+// ---------------------------------
+
+// -------------- ROOMS -----------------------
+router.get('/rooms', adminController.getAllRooms);
+
+/**
+ * @desc    Add a new room
+ * @route   POST /api/admin/rooms
+ * @access  Private/Admin
+ */
+router.post('/rooms', adminController.addRoom);
+
+/**
+ * @desc    Edit room details
+ * @route   PUT /api/admin/rooms/:id
+ * @access  Private/Admin
+ */
+router.put('/rooms/:id', adminController.editRoom);
+
+/**
+ * @desc    Delete a room
+ * @route   DELETE /api/admin/rooms/:id
+ * @access  Private/Admin
+ */
+router.delete('/rooms/:id', adminController.deleteRoom);
+
+// --------------------------------------
+
+// ------------- SUBJECTS -------------------
+/*
+ * @desc    Get all subjects (populated with class info)
+ * @route   GET /api/admin/subjects
+ * @access  Private/Admin
+ */
+router.get('/subjects', adminController.getAllSubjects);
+
+/*
+ * @desc    Add a new subject
+ * @route   POST /api/admin/subjects
+ * @access  Private/Admin
+ */
+router.post('/subjects', adminController.addSubject);
+
+/*
+ * @desc    Delete a subject by ID
+ * @route   DELETE /api/admin/subjects/:id
+ * @access  Private/Admin
+ */
+router.delete('/subjects/:id', adminController.deleteSubject);
 
 export default router;

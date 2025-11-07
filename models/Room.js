@@ -14,7 +14,14 @@ const roomSchema = new Schema(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+roomSchema.virtual('cameras', {
+  ref: 'Camera', // The model to populate from
+  localField: '_id', // Find in Camera where...
+  foreignField: 'room', // ...'room' field matches this model's '_id'
+  justOne: false, // We expect an array, not a single document
+});
 
 export const Room = model('Room', roomSchema);

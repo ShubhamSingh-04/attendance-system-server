@@ -20,14 +20,10 @@ const studentSchema = new Schema(
       required: true,
       unique: true,
     },
-    // Link to their class/department
+    // Link to their class/department & semester
     class: {
       type: Schema.Types.ObjectId,
       ref: 'Class',
-      required: true,
-    },
-    semester: {
-      type: Number,
       required: true,
     },
     phoneNumber: {
@@ -39,13 +35,6 @@ const studentSchema = new Schema(
       type: [Number],
       default: [],
     },
-    // Subjects the student is enrolled in for the current semester
-    enrolledSubjects: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Subject',
-      },
-    ],
   },
   { timestamps: true }
 );
