@@ -1,5 +1,6 @@
 import { AttendanceRecord } from '../models/AttendanceRecord.js';
 import { Student } from '../models/Student.js';
+import { Subject } from '../models/Subject.js';
 import mongoose from 'mongoose';
 
 /**
@@ -276,9 +277,89 @@ async function updateAttendanceRecord(recordId, newStatus, teacherId) {
   }
 }
 
+/**
+ * Generates an attendance summary for a single student across ALL their subjects.
+ * @param {string} studentProfileId - The _id of the student's profile.
+ * @param {string} classId - The _id of the student's class.
+ * @returns {Promise<Array>} A list of subjects with attendance stats.
+ */
+async function getStudentAttendanceSummary(studentProfileId, classId) {
+  // 1. Get all subjects for the student's class
+  const allSubjects = await Subject.find({ class: classId })
+    .select('name subjectCode')
+    .lean();
+
+  if (!allSubjects || allSubjects.length === 0) {
+    return []; // No subjects for this class, return empty summary
+  }
+
+  // 2. Run an aggregation to count attendance for this ONE student
+  //    but grouped by EACH subject.
+  const stats = await AttendanceRecord.aggregate([
+    {
+      // Find all records for this student
+      $match: {
+        student: new mongoose.Types.ObjectId(studentProfileId),
+      },
+    },
+    {
+      // Group the records by subject ID
+      $group: {
+        _id: '$subject', // Group by the 'subject' field
+        presentCount: {
+          $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] },
+        },
+        absentCount: {
+          $sum: { $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0] },
+        },
+      },
+    },
+  ]);
+
+  // 3. Create a lookup map for efficient merging
+  // statsMap key: subjectId (string)
+  const statsMap = new Map();
+  for (const stat of stats) {
+    const total = stat.presentCount + stat.absentCount;
+    statsMap.set(stat._id.toString(), {
+      present: stat.presentCount,
+      absent: stat.absentCount,
+      totalClasses: total,
+      presentPercentage: ((stat.presentCount / total) * 100).toFixed(1),
+      absentPercentage: ((stat.absentCount / total) * 100).toFixed(1),
+    });
+  }
+
+  // 4. Combine the full subject list with the calculated stats
+  const summaryList = allSubjects.map((subject) => {
+    const subjectStats = statsMap.get(subject._id.toString());
+
+    // If no stats found (e.g., no classes yet), return default
+    if (!subjectStats) {
+      return {
+        ...subject, // { _id, name, subjectCode }
+        present: 0,
+        absent: 0,
+        totalClasses: 0,
+        presentPercentage: '0.0',
+        absentPercentage: '0.0',
+      };
+    }
+
+    // If stats were found, combine them
+    return {
+      ...subject,
+      ...subjectStats,
+    };
+  });
+
+  return summaryList;
+}
+
 export const attendanceService = {
   saveAttendanceRecords,
   getRecordsByDate,
   getAttendanceSummary,
   updateAttendanceRecord,
+  getStudentAttendanceSummary,
 };

@@ -11,6 +11,7 @@ import connectDB from './config/db.js';
 import teacherRoutes from './routes/teacherRoute.js';
 import authRoutes from './routes/authRoute.js';
 import adminRoutes from './routes/adminRoute.js';
+import studentRoutes from './routes/studentRoute.js';
 
 // Initialize Express app
 const app = express();
@@ -54,6 +55,7 @@ app.get('/test', (req, res) => {
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
 
 // 404 Not Found Handler
 // This catches any request that doesn't match a route

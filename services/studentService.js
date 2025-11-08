@@ -3,6 +3,7 @@ import axios from 'axios';
 import { User } from '../models/User.js';
 import { Student } from '../models/Student.js';
 import { Class } from '../models/Class.js';
+import { Subject } from '../models/Subject.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -386,10 +387,55 @@ async function getStudentsForClass(classId) {
   }
 }
 
+/**
+ * Gets the populated class details for a student.
+ * @param {string} studentProfileId - The ObjectId of the student's profile.
+ * @returns {Promise<Object>} The student's class details.
+ */
+async function getStudentClassDetails(studentProfileId) {
+  const student = await Student.findById(studentProfileId)
+    .populate({
+      path: 'class',
+      select: 'name department semester',
+    })
+    .select('class')
+    .lean();
+
+  if (!student || !student.class) {
+    throw new Error('Student class details not found.');
+  }
+  return student.class;
+}
+
+/**
+ * Gets all subjects for a student's class.
+ * @param {string} studentProfileId - The ObjectId of the student's profile.
+ * @returns {Promise<Array>} A list of subjects.
+ */
+async function getSubjectsForStudentClass(studentProfileId) {
+  // 1. Find the student's class ID
+  const student = await Student.findById(studentProfileId)
+    .select('class')
+    .lean();
+  if (!student) {
+    throw new Error('Student not found.');
+  }
+
+  // 2. Find all subjects for that class
+  const subjects = await Subject.find({ class: student.class })
+    .select('name subjectCode')
+    .lean();
+
+  return subjects;
+}
+
 export const studentService = {
   createNewStudent,
   deleteStudentById,
   updateStudentById,
   getStudents,
   getStudentsForClass,
+  getStudentsForClass,
+  getStudentClassDetails,
+  getSubjectsForStudentClass,
 };
