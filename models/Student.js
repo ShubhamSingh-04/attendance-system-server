@@ -18,7 +18,7 @@ const studentSchema = new Schema(
     rollNo: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     // Link to their class/department & semester
     class: {
@@ -29,8 +29,7 @@ const studentSchema = new Schema(
     phoneNumber: {
       type: String,
     },
-    // As per your note, we store the embeddings, not the photo.
-    // This will be an array of numbers.
+    // We store the embeddings, not the photo.
     faceEmbeddings: {
       type: [Number],
       default: [],

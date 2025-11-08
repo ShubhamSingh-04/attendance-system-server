@@ -5,6 +5,9 @@ import roleMiddleware from '../middlewares/roleMiddleware.js';
 import userController from '../controllers/userController.js';
 import { adminController } from '../controllers/adminController.js';
 
+// accepts a single file with the field name 'studentImage'
+import uploadStudentPic from '../middlewares/multerConfig.js';
+
 router.use(protectMiddleware.protect);
 router.use(roleMiddleware.isAdmin);
 
@@ -118,5 +121,17 @@ router.post('/class', adminController.addClass);
  * @access  Private/Admin
  */
 router.delete('/class/:id', adminController.deleteClass);
+
+// -------------------------------------------
+
+// ------------- STUDENTS -------------------
+
+router.post('/student', uploadStudentPic, adminController.createStudent);
+
+router.delete('/student/:id', adminController.deleteStudent);
+
+router.put('/student/:id', uploadStudentPic, adminController.updateStudent);
+
+// ------------------------------------------
 
 export default router;

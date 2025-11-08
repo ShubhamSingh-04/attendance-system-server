@@ -1,8 +1,14 @@
 import { adminService } from '../services/adminService.js';
 import { roomService } from '../services/roomService.js';
-import subjectService from '../services/subjectService.js';
-import classService from '../services/classService.js';
+import { subjectService } from '../services/subjectService.js';
+import { classService } from '../services/classService.js';
+import { studentService } from '../services/studentService.js';
+import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // =================================================================
 // --- TEACHER CONTROLLERS ---
@@ -435,6 +441,151 @@ export const deleteClass = async (req, res) => {
   }
 };
 
+// =================================================================
+// --- STUDENT CONTROLLERS ---
+// =================================================================
+
+/**
+ * @desc    Create a new student
+ * @route    POST /api/admin/create-student
+ * @access   Private/Admin
+ */
+export const createStudent = asyncHandler(async (req, res) => {
+  const {
+    name,
+    classCode,
+    rollNo,
+    semester,
+    username,
+    email,
+    password,
+    phoneNumber,
+  } = req.body;
+
+  // 1. Validate file upload
+  if (!req.file) {
+    res.status(400);
+    throw new Error('Student image is required.');
+  }
+
+  const imagePath = req.file.path;
+  const imageFilename = req.file.filename;
+
+  try {
+    // 2. Call the service layer with all the data
+    const { user, student } = await studentService.createNewStudent({
+      name,
+      classCode,
+      rollNo,
+      semester,
+      username,
+      email,
+      password,
+      phoneNumber,
+      imageFilename, // Pass the filename to the service
+    });
+
+    // 3. Service succeeded: Send response
+    res.status(201).json({
+      message: 'Student created successfully.',
+      user,
+      student,
+    });
+  } catch (error) {
+    // 4. --- CONTROLLER-LEVEL CLEANUP ---
+    // If anything in the service fails, delete the orphaned file
+    fs.unlinkSync(imagePath);
+
+    // 5. Send the error response
+    // Use the status code from the service error, or default
+    res.status(error.statusCode || 500);
+    console.error('Create student failed:', error.message);
+    throw new Error(`Upload failed ${error.message}`);
+  }
+});
+
+/**
+ * @desc    Delete a student
+ * @route    DELETE /api/admin/student/:id
+ * @access   Private/Admin
+ */
+export const deleteStudent = asyncHandler(async (req, res) => {
+  try {
+    // The ID comes from the URL parameters (e.g., /api/admin/student/12345)
+    const studentId = req.params.id;
+
+    if (!studentId) {
+      res.status(400);
+      throw new Error('Student ID is required.');
+    }
+
+    // Call the service to do all the work
+    const { message } = await studentService.deleteStudentById(studentId);
+
+    // Send success response
+    res.status(200).json({ message });
+  } catch (error) {
+    // Pass the error to the Express error handler
+    res.status(error.statusCode || 500);
+    console.error('Delete student failed:', error.message);
+    throw new Error(`Could not delete student: ${error.message}`);
+  }
+});
+
+/**
+ * @desc    Update a student
+ * @route    PUT /api/admin/student/:id
+ * @access   Private/Admin
+ */
+export const updateStudent = asyncHandler(async (req, res) => {
+  const studentId = req.params.id;
+  const {
+    name,
+    classCode,
+    semester,
+    username,
+    email,
+    phoneNumber,
+    // Note: We need rollNo in the body for the middleware to work
+    rollNo,
+  } = req.body;
+
+  // Check if a new file was uploaded
+  const imageFilename = req.file ? req.file.filename : null;
+  const imagePath = req.file ? req.file.path : null;
+
+  try {
+    const { user, student } = await studentService.updateStudentById(
+      studentId,
+      {
+        name,
+        classCode,
+        semester,
+        username,
+        email,
+        phoneNumber,
+        imageFilename, // Pass the filename (or null) to the service
+      }
+    );
+
+    res.status(200).json({
+      message: 'Student updated successfully.',
+      user,
+      student,
+    });
+  } catch (error) {
+    // If an image was uploaded but the service failed, delete the new file
+    if (imagePath) {
+      fs.unlinkSync(imagePath);
+    }
+
+    // Pass the error to the Express error handler
+    res.status(error.statusCode || 500);
+    console.error('Update student failed:', error.message);
+    throw new Error(`Could not update student: ${error.message}`);
+  }
+});
+
 export const adminController = {
   getAllTeachers,
   addTeacher,
@@ -450,4 +601,7 @@ export const adminController = {
   deleteClass,
   getAllClasses,
   addClass,
+  createStudent,
+  deleteStudent,
+  updateStudent,
 };

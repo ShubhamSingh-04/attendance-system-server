@@ -110,7 +110,7 @@ const deleteSubject = async (subjectId) => {
   return { message: 'Subject deleted successfully.' };
 };
 
-export default {
+export const subjectService = {
   validateSubjectCodes,
   deleteSubject,
   addSubject,

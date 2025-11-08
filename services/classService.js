@@ -87,7 +87,7 @@ export const deleteClass = async (classId) => {
   return { message: 'Class deleted successfully.' };
 };
 
-export default {
+export const classService = {
   validateClassCodes,
   deleteClass,
   addClass,

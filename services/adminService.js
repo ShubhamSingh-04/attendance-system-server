@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 import { User } from '../models/User.js'; // Assuming models are in a 'models' directory
 import { Teacher } from '../models/Teacher.js'; // Assuming models are in a 'models' directory
 
-import subjectService from './subjectService.js';
-import classService from './classService.js';
+import { subjectService } from './subjectService.js';
+import { classService } from './classService.js';
 
 const getAllTeachers = async () => {
   try {
