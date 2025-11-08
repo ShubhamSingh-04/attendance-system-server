@@ -1,5 +1,3 @@
-import cameraService from '../services/camera.service.js';
-
 import asyncHandler from 'express-async-handler';
 import teacherService from '../services/teacherService.js';
 

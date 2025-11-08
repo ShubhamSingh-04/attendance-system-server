@@ -65,4 +65,7 @@ router
   .put(uploadStudentPic, adminController.updateStudent)
   .delete(adminController.deleteStudent);
 
+// ---------------- STREAM FEED ------------------
+router.get('/stream/:roomId', adminController.streamByRoom);
+
 export default router;

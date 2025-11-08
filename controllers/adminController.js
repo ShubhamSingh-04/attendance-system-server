@@ -3,10 +3,12 @@ import { roomService } from '../services/roomService.js';
 import { subjectService } from '../services/subjectService.js';
 import { classService } from '../services/classService.js';
 import { studentService } from '../services/studentService.js';
+import createStreamProxy from '../utils/createStreamProxy.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import cameraService from '../services/cameraService.js';
 
 dotenv.config();
 
@@ -610,6 +612,53 @@ export const getStudents = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Stream video from a camera associated with a room
+// @route   GET /api/admin/stream/:roomId
+// @access  Public (or Private if you add middleware back)
+export const streamByRoom = asyncHandler(async (req, res, next) => {
+  const { roomId } = req.params;
+
+  let camera;
+  try {
+    // 1. Get camera data
+    camera = await cameraService.getCameraForRoom(roomId);
+  } catch (error) {
+    res.status(error.statusCode || 500);
+    console.error('Camera Not Found for the room: ', roomId);
+    throw new Error(`Error fetching camera for the room: ${error.message}`);
+  }
+
+  // --- FIX: Splitting URL and simplifying proxy ---
+  let targetHost;
+  let targetPath;
+  try {
+    // 2. Split the full URL from the database
+    const cameraUrl = new URL(camera.cameraAccessLink);
+    targetHost = cameraUrl.origin; // e.g., "http://192.168.1.3:8080"
+    targetPath = cameraUrl.pathname; // e.g., "/video"
+  } catch (urlError) {
+    console.error(
+      'Invalid cameraAccessLink in database:',
+      camera.cameraAccessLink
+    );
+    res.status(500);
+    throw new Error('Camera configuration is invalid. URL is malformed.');
+  }
+
+  req.url = targetPath; // e.g., "/video"
+
+  // Add logs to see what's happening
+  // console.log(`[Stream Proxy] Request for: ${req.originalUrl.split('?')[0]}`);
+  // console.log(`[Stream Proxy] -> Target Host: ${targetHost}`);
+  // console.log(`[Stream Proxy] -> Forwarding to path: ${req.url}`);
+
+  // 5. Dynamically create the proxy with the host and *no rewrite rules*
+  const proxy = createStreamProxy(targetHost, {}); // Pass empty rules
+
+  // 6. Run the proxy middleware
+  proxy(req, res, next);
+});
+
 export const adminController = {
   getAllTeachers,
   addTeacher,
@@ -629,4 +678,5 @@ export const adminController = {
   deleteStudent,
   updateStudent,
   getStudents,
+  streamByRoom,
 };
