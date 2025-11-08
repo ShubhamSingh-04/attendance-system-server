@@ -7,7 +7,6 @@ import asyncHandler from 'express-async-handler';
  * @access  Private (Admin, Teacher, or Student)
  */
 const getSelfProfile = asyncHandler(async (req, res) => {
-  //   console.log('user cont 11');
   const userId = req.user.id;
 
   // 1. Find the user first, WITHOUT populating
@@ -18,19 +17,49 @@ const getSelfProfile = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
-  // Only attempt to populate if the role is one that HAS a profile model
-  if (user.role === 'Teacher' || user.role === 'Student') {
-    // We can safely populate now
-    await user.populate('profileId');
+  // 2. Conditionally populate based on role
+  if (user.role === 'Teacher') {
+    // --- UPDATED LOGIC ---
+    // If it's a Teacher, populate their profile...
+    await user.populate({
+      path: 'profileId', // The field in the User model
+      // ...and inside that profile, populate these fields:
+      populate: [
+        {
+          path: 'assignedClasses', // Populates the array of Class documents
+          model: 'Class',
+        },
+        {
+          path: 'subjects', // Populates the array of Subject documents
+          model: 'Subject',
+          // ...and inside EACH subject, populate its class details
+          populate: {
+            path: 'class',
+            model: 'Class',
+          },
+        },
+      ],
+    });
+  } else if (user.role === 'Student') {
+    // If it's a Student, populate their profile...
+    await user.populate({
+      path: 'profileId', // The field in the User model
+      // ...and inside that profile, populate their class:
+      populate: {
+        path: 'class', // The field in the StudentProfile model
+        model: 'Class',
+      },
+    });
   }
+  // If role is 'Admin', user.profileId is null, so we do nothing.
 
-  // Send the response
+  // 3. Send the response
   res.status(200).json({
     _id: user._id,
     username: user.username,
     email: user.email,
     role: user.role,
-    // 'profile' will be the populated object (if Teacher/Student)
+    // 'profile' will be the fully populated object (if Teacher/Student)
     // or null (if Admin)
     profile: user.profileId,
   });

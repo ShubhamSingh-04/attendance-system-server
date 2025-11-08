@@ -22,7 +22,7 @@ const getAllTeachers = async (req, res) => {
   try {
     const teachers = await adminService.getAllTeachers();
     res.status(200).json({
-      totalTeachers: teachers.length,
+      count: teachers.length,
       teachers,
     });
   } catch (error) {
@@ -222,7 +222,7 @@ const getAllRooms = async (req, res) => {
   try {
     const rooms = await roomService.getAllRooms();
     res.status(200).json({
-      noOfRooms: rooms.length,
+      count: rooms.length,
       rooms,
     });
   } catch (error) {
@@ -303,7 +303,7 @@ const getAllSubjects = async (req, res) => {
   try {
     const subjects = await subjectService.getAllSubjects();
     res.status(200).json({
-      noOfSubjects: subjects.length,
+      count: subjects.length,
       subjects,
     });
   } catch (error) {
@@ -378,7 +378,7 @@ export const getAllClasses = async (req, res) => {
   try {
     const classes = await classService.getAllClasses();
     res.status(200).json({
-      noOfClasses: classes.length,
+      count: classes.length,
       classes,
     });
   } catch (error) {
@@ -586,6 +586,30 @@ export const updateStudent = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * @desc    Get all students, or filter by class
+ * @route    GET /api/admin/students
+ * @route    GET /api/admin/students?classCode=...
+ * @access   Private/Admin
+ */
+export const getStudents = asyncHandler(async (req, res) => {
+  // Check for classCode in the query parameters
+  const { classCode } = req.query;
+
+  try {
+    const { count, students } = await studentService.getStudents({ classCode });
+
+    res.status(200).json({
+      count,
+      students,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500);
+    console.error('Get students failed:', error.message);
+    throw new Error(`Could not get students: ${error.message}`);
+  }
+});
+
 export const adminController = {
   getAllTeachers,
   addTeacher,
@@ -604,4 +628,5 @@ export const adminController = {
   createStudent,
   deleteStudent,
   updateStudent,
+  getStudents,
 };

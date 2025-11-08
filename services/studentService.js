@@ -309,8 +309,67 @@ export const updateStudentById = async (studentId, updateData) => {
   }
 };
 
+// --- GET STUDENTS FUNCTION ---
+
+/**
+ * @desc Gets all students, optionally filtered by classCode.
+ * @param {object} filters - An object that can contain `classCode`.
+ * @returns {object} { count, students }
+ */
+export const getStudents = async (filters = {}) => {
+  const { classCode } = filters;
+
+  const queryFilter = {};
+
+  // If a classCode is provided, find the class _id first
+  if (classCode) {
+    const studentClass = await Class.findOne({ classCode });
+
+    // If the class doesn't exist, return no students
+    if (!studentClass) {
+      const error = new Error(`Class with code ${classCode} not found.`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Use the found class _id for the filter
+    queryFilter.class = studentClass._id;
+  }
+
+  try {
+    const students = await Student.find(queryFilter)
+      // Populate the 'user' field, select specific fields from User
+      // Exclude password, and timestamps
+      .populate({
+        path: 'user',
+        select: 'username email role profileId',
+      })
+      // Populate the 'class' field, exclude timestamps
+      .populate({
+        path: 'class',
+        select: '-createdAt -updatedAt -__v',
+      })
+      // From the Student document, exclude timestamps and face embeddings
+      .select('-createdAt -updatedAt -__v -faceEmbeddings');
+
+    return {
+      count: students.length,
+      students: students,
+    };
+  } catch (dbError) {
+    // Re-throw the error if it's one we created (like 404)
+    if (dbError.statusCode) throw dbError;
+
+    // Otherwise, create a new 500 error
+    const error = new Error(`Database query failed: ${dbError.message}`);
+    error.statusCode = 500;
+    throw error;
+  }
+};
+
 export const studentService = {
   createNewStudent,
   deleteStudentById,
   updateStudentById,
+  getStudents,
 };

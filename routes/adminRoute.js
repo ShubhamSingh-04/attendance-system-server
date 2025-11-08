@@ -56,6 +56,8 @@ router
 router.route('/class/:id').delete(adminController.deleteClass);
 
 // ------------- STUDENTS -------------------
+router.route('/students').get(adminController.getStudents);
+
 router.route('/student').post(uploadStudentPic, adminController.createStudent);
 
 router
