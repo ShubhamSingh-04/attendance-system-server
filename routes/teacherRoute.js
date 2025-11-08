@@ -24,13 +24,13 @@ router.route('/my-classes').get(teacherController.getMyClasses);
  */
 router.route('/my-subjects').get(teacherController.getMySubjects);
 
-// /**
-//  * @route   GET /get-camera-pic
-//  * @desc    Fetches a single snapshot from the IP camera
-//  */
-// router.get(
-//   '/mark-attendance/:classCode/:subjectCode/:roomName'
-//   teacherController.markAttendance
-// );
+/**
+ * @route   GET /api/teacher/mark-attendance/:classId/:subjectId/:roomId
+ * @desc    Takes a snapshot, runs ML, and returns a preview of attendance
+ * @access  Private (Teacher)
+ */
+router
+  .route('/mark-attendance/:classId/:subjectId/:roomId')
+  .get(teacherController.markAttendance);
 
 export default router;

@@ -367,9 +367,29 @@ export const getStudents = async (filters = {}) => {
   }
 };
 
+/**
+ * Fetches all students belonging to a specific class.
+ * We only select the fields needed for recognition.
+ * @param {string} classId - The ObjectId of the class.
+ * @returns {Promise<Array>} A list of students.
+ */
+async function getStudentsForClass(classId) {
+  try {
+    const students = await Student.find({ class: classId })
+      .select('name rollNo faceEmbeddings')
+      .lean(); // .lean() for faster, plain JS objects
+
+    return students;
+  } catch (error) {
+    console.error(`Error fetching students for class ${classId}:`, error);
+    throw new Error('Could not retrieve students from database.');
+  }
+}
+
 export const studentService = {
   createNewStudent,
   deleteStudentById,
   updateStudentById,
   getStudents,
+  getStudentsForClass,
 };

@@ -1,5 +1,8 @@
 import asyncHandler from 'express-async-handler';
 import teacherService from '../services/teacherService.js';
+import cameraService from '../services/cameraService.js';
+import { studentService } from '../services/studentService.js';
+import { mlService } from '../services/mlService.js';
 
 /**
  * @desc    Get all classes assigned to the logged-in teacher
@@ -35,58 +38,77 @@ const getMySubjects = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * @desc    Mark attendance (placeholder)
- * @route   GET /api/teacher/mark-attendance/...
- * @access  Private (Teacher)
- */
-const markAttendance = asyncHandler(async (req, res) => {
-  // Your logic for markAttendance would go here
-  res.status(200).json({ message: 'Attendance marking logic not implemented' });
+// @desc    Mark attendance by taking a snapshot and recognizing students
+// @route   GET /api/teacher/mark-attendance/:classId/:subjectId/:roomId
+// @access  Private (Teacher)
+const markAttendance = asyncHandler(async (req, res, next) => {
+  const { classId, subjectId, roomId } = req.params;
+
+  // --- Step 1 & 2: Get snapshot from camera and save it ---
+  let imageName;
+  try {
+    imageName = await cameraService.getSnapshotFromCamera(
+      roomId,
+      classId,
+      subjectId
+    );
+  } catch (error) {
+    console.error('Failed to get snapshot:', error);
+    res.status(500);
+    throw new Error(`Failed to get camera snapshot: ${error.message}`);
+  }
+
+  // --- Step 3: Fetch all students for the class ---
+  const allStudents = await studentService.getStudentsForClass(classId);
+  if (allStudents.length === 0) {
+    res.status(404);
+    throw new Error('No students found for this class.');
+  }
+
+  // Filter for students who actually have embeddings to check
+  const studentsWithEmbeddings = allStudents.filter(
+    (s) => s.faceEmbeddings && s.faceEmbeddings.length > 0
+  );
+  if (studentsWithEmbeddings.length === 0) {
+    res.status(400);
+    throw new Error('No students in this class have registered face data.');
+  }
+
+  // --- Step 4: Call ML service ---
+  const mlResult = await mlService.recognizeStudents(
+    imageName,
+    studentsWithEmbeddings
+  );
+  // mlResult = { faces_detected, unrecognized_faces, recognized_usns: [...] }
+
+  // --- Step 5 & 6: Format the response for the frontend ---
+  const recognizedUsns = new Set(mlResult.recognized_usns);
+
+  const attendanceList = allStudents.map((student) => {
+    // Check if the student's rollNo is in the recognized set
+    const status = recognizedUsns.has(student.rollNo) ? 'Present' : 'Absent';
+
+    return {
+      _id: student._id,
+      name: student.name,
+      rollNo: student.rollNo, // 'rollNo' from your schema
+      status: status,
+    };
+  });
+
+  // Send the full report to the frontend for review
+  res.json({
+    stats: {
+      faces_detected: mlResult.faces_detected,
+      unrecognized_faces: mlResult.unrecognized_faces,
+      students_present: recognizedUsns.size,
+      students_absent: allStudents.length - recognizedUsns.size,
+    },
+    attendanceList: attendanceList,
+  });
 });
 
-// /**
-//  * Controller to handle fetching the camera picture.
-//  * It calls the service to get the image stream and
-//  * pipes it to the response. It also handles error formatting.
-//  */
-// const markAttendance = async (req, res) => {
-//   try {
-//     const CAMERA_URL = 'http://192.168.1.3:8080/shot.jpg';
-//     const imageStream = await cameraService.fetchCameraImage(CAMERA_URL);
-
-//     // --- Success ---
-//     // Set the content-type header
-//     res.setHeader('Content-Type', 'image/jpeg');
-
-//     // Pipe the image data from the service straight to the client's response
-//     imageStream.pipe(res);
-//   } catch (error) {
-//     // --- Error Handling ---
-//     let errorMessage = 'Error fetching image from camera.';
-
-//     if (error.response) {
-//       // The request was made and the server responded with a non-2xx status
-//       console.error(
-//         'Camera server responded with error:',
-//         error.response.status
-//       );
-//       errorMessage = `Camera server error: ${error.response.status}`;
-//     } else if (error.request) {
-//       // The request was made but no response was received
-//       console.error('No response from camera server. Is it on?');
-//       errorMessage =
-//         'Could not connect to camera. Check IP and if server is running.';
-//     } else {
-//       // Something else happened in setting up the request
-//       console.error('Axios error:', error.message);
-//       errorMessage = error.message;
-//     }
-
-//     res.status(500).send({ error: errorMessage });
-//   }
-// };
-
+// Export all controller functions
 export default {
   getMyClasses,
   getMySubjects,
