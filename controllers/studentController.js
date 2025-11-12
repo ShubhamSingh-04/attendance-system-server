@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { studentService } from '../services/studentService.js';
 import { attendanceService } from '../services/attendanceService.js';
+import { AttendanceRecord } from '../models/AttendanceRecord.js';
 
 /**
  * @desc    Get the logged-in student's class details
@@ -45,43 +46,63 @@ const getMySubjects = asyncHandler(async (req, res) => {
 const getMyAttendanceRecords = asyncHandler(async (req, res) => {
   const { subjectId, date } = req.query;
 
-  // 1. Get student's classId from their profile
-  const studentClass = await studentService.getStudentClassDetails(
-    req.user.profileId
-  );
-  const classId = studentClass._id;
+  // 1. Get student's ID from their authenticated profile
+  const studentId = req.user.profileId;
 
-  // 2. Validate input
+  // If no filters provided, fetch ALL records for the student
+  if (!subjectId || !date) {
+    try {
+      const records = await AttendanceRecord.find({ student: studentId })
+        .populate({
+          path: 'subject',
+          select: 'name subjectCode',
+        })
+        .populate({
+          path: 'markedBy',
+          select: 'name',
+        })
+        .populate({
+          path: 'student',
+          select: 'name rollNo',
+        })
+        .select('-__v')
+        .sort({ date: -1 });
+
+      res.status(200).json({
+        message: 'Records fetched successfully',
+        count: records.length,
+        records: records,
+      });
+    } catch (error) {
+      res.status(500);
+      throw error;
+    }
+    return;
+  }
+
+  // 2. Validate input if filters ARE provided
   if (!subjectId || !date) {
     res.status(400);
     throw new Error('Missing required query parameters: subjectId and date.');
   }
 
-  // 3. Call the *reusable* service
+  // 3. Call the *new, efficient* service
   try {
-    const result = await attendanceService.getRecordsByDate(
-      classId,
+    const records = await attendanceService.getStudentRecordsByDate(
+      studentId,
       subjectId,
       date
     );
 
-    // 4. Filter the results to only include the current student
-    //    *** THIS IS THE FIX ***
-    //    We must convert both req.user.profileId and the record's student ID
-    //    to strings for a reliable comparison.
-    const myRecords = result.records.filter(
-      (record) =>
-        record.student._id.toString() === req.user.profileId.toString()
-    );
-
+    // 4. Return the records (no filtering needed)
     res.status(200).json({
       message: 'Records fetched successfully',
-      count: myRecords.length,
-      records: myRecords,
+      count: records.length,
+      records: records,
     });
   } catch (error) {
-    // If getRecordsByDate throws a 404 (no records found at all),
-    // it's better to return an empty list for the student.
+    // If getStudentRecordsByDate throws a 404 (no records found),
+    // return an empty list as requested.
     if (error.statusCode === 404) {
       res.status(200).json({
         message: 'No records found for this date.',

@@ -17,6 +17,13 @@ router.use(roleMiddleware.isAdmin);
 // If this should be available to non-admins, move it *before* router.use(roleMiddleware.isAdmin);
 router.get('/me', userController.getSelfProfile);
 
+/**
+ * @route   GET /api/admin/stats
+ * @desc    Get dashboard counts
+ * @access  Private/Admin
+ */
+router.get('/stats', adminController.getDashboardStats);
+
 // --------------- TEACHER ---------------------------
 router
   .route('/teachers')

@@ -139,6 +139,52 @@ async function getRecordsByDate(classId, subjectId, date) {
 }
 
 /**
+ * Fetches attendance records for a *single* student by subject and date.
+ * @param {string} studentId - The ID of the student.
+ *@param {string} subjectId - The ID of the subject.
+ * @param {string} date - The date to query (e.g., "2025-11-08").
+ * @returns {Promise<Array>} A list of attendance records.
+ */
+async function getStudentRecordsByDate(studentId, subjectId, date) {
+  // 1. Create a date range for the entire day
+  const startDate = new Date(date);
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(date);
+  endDate.setHours(23, 59, 59, 999);
+
+  // 2. Find records matching student, subject, and date range
+  const records = await AttendanceRecord.find({
+    student: studentId,
+    subject: subjectId,
+    date: {
+      $gte: startDate,
+      $lte: endDate,
+    },
+  })
+    .populate({
+      path: 'student',
+      select: 'name rollNo',
+    })
+    .populate({
+      path: 'markedBy',
+      select: 'name', // Get the teacher's name
+    })
+    .select('student status date time')
+    .lean();
+
+  if (!records || records.length === 0) {
+    const err = new Error(
+      'No attendance records found for this student, subject, and date.'
+    );
+    err.statusCode = 404;
+    throw err;
+  }
+
+  return records;
+}
+
+/**
  * Generates a full attendance summary for every student in a class
  * for a specific subject.
  * @param {string} classId - The ID of the class.
@@ -362,4 +408,5 @@ export const attendanceService = {
   getAttendanceSummary,
   updateAttendanceRecord,
   getStudentAttendanceSummary,
+  getStudentRecordsByDate,
 };

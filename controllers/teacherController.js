@@ -7,6 +7,7 @@ import cameraService from '../services/cameraService.js';
 import { studentService } from '../services/studentService.js';
 import { mlService } from '../services/mlService.js';
 import { attendanceService } from '../services/attendanceService.js';
+import { roomService } from '../services/roomService.js';
 
 /**
  * @desc    Get all classes assigned to the logged-in teacher
@@ -39,6 +40,20 @@ const getMySubjects = asyncHandler(async (req, res) => {
   res.status(200).json({
     count: subjects.length,
     subjects,
+  });
+});
+
+/**
+ * @desc    Get all available rooms
+ * @route   GET /api/teacher/rooms
+ * @access  Private (Teacher)
+ */
+const getAllRooms = asyncHandler(async (req, res) => {
+  const rooms = await roomService.getAllRooms();
+
+  res.status(200).json({
+    count: rooms.length,
+    rooms,
   });
 });
 
@@ -275,6 +290,7 @@ const updateAttendanceRecord = asyncHandler(async (req, res, next) => {
 export const teacherController = {
   getMyClasses,
   getMySubjects,
+  getAllRooms,
   checkAttendance,
   markAttendance,
   getAttendanceRecords,

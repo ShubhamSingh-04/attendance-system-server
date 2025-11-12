@@ -8,6 +8,20 @@ import path from 'path';
 import fs from 'fs';
 
 /**
+ * Counts the total number of student profiles.
+ * @returns {Promise<number>} The total count of students.
+ */
+async function countStudents() {
+  try {
+    const count = await Student.countDocuments({});
+    return count;
+  } catch (error) {
+    console.error('Error counting students:', error);
+    throw new Error('Could not retrieve student count.');
+  }
+}
+
+/**
  * @desc Creates a new student, user, and generates embeddings.
  * @param {object} studentData - Data object from the controller.
  * @returns {object} { user, student }
@@ -438,4 +452,5 @@ export const studentService = {
   getStudentsForClass,
   getStudentClassDetails,
   getSubjectsForStudentClass,
+  countStudents,
 };

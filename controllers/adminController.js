@@ -3,6 +3,7 @@ import { roomService } from '../services/roomService.js';
 import { subjectService } from '../services/subjectService.js';
 import { classService } from '../services/classService.js';
 import { studentService } from '../services/studentService.js';
+import teacherService from '../services/teacherService.js';
 import createStreamProxy from '../utils/createStreamProxy.js';
 import asyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
@@ -11,6 +12,31 @@ import dotenv from 'dotenv';
 import cameraService from '../services/cameraService.js';
 
 dotenv.config();
+
+/**
+ * @desc    Get dashboard stats (counts of students, teachers, rooms)
+ * @route   GET /api/admin/stats
+ * @access  Private/Admin
+ */
+export const getDashboardStats = asyncHandler(async (req, res) => {
+  try {
+    // Run all count queries in parallel for maximum efficiency
+    const [studentCount, teacherCount, roomCount] = await Promise.all([
+      studentService.countStudents(),
+      teacherService.countTeachers(),
+      roomService.countRooms(),
+    ]);
+
+    res.status(200).json({
+      students: studentCount,
+      teachers: teacherCount,
+      rooms: roomCount,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(`Failed to fetch dashboard stats: ${error.message}`);
+  }
+});
 
 // =================================================================
 // --- TEACHER CONTROLLERS ---
@@ -679,4 +705,5 @@ export const adminController = {
   updateStudent,
   getStudents,
   streamByRoom,
+  getDashboardStats,
 };

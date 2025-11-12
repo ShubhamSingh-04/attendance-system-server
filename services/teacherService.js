@@ -5,6 +5,20 @@ import { Class } from '../models/Class.js';
 import { Subject } from '../models/Subject.js';
 
 /**
+ * Counts the total number of teacher profiles.
+ * @returns {Promise<number>} The total count of teachers.
+ */
+async function countTeachers() {
+  try {
+    const count = await Teacher.countDocuments({});
+    return count;
+  } catch (error) {
+    console.error('Error counting teachers:', error);
+    throw new Error('Could not retrieve teacher count.');
+  }
+}
+
+/**
  * Fetches the populated list of assigned classes for a specific teacher.
  * @param {string} teacherProfileId - The _id of the Teacher document.
  * @returns {Promise<Array>} A promise that resolves to an array of Class documents.
@@ -55,4 +69,5 @@ const fetchMySubjects = async (teacherProfileId) => {
 export default {
   fetchMyClasses,
   fetchMySubjects,
+  countTeachers,
 };

@@ -2,6 +2,20 @@ import { Room } from '../models/Room.js';
 import { Camera } from '../models/Camera.js';
 
 /**
+ * Counts the total number of rooms.
+ * @returns {Promise<number>} The total count of rooms.
+ */
+const countRooms = async () => {
+  try {
+    const count = await Room.countDocuments({});
+    return count;
+  } catch (error) {
+    console.error('Error counting rooms:', error);
+    throw new Error('Could not retrieve room count.');
+  }
+};
+
+/**
  * Creates a new Room and optionally creates associated cameras.
  * Implements manual transaction/rollback.
  */
@@ -211,4 +225,5 @@ export const roomService = {
   getAllRooms,
   editRoom,
   deleteRoom,
+  countRooms,
 };

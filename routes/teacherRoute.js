@@ -31,6 +31,13 @@ router.route('/my-classes').get(teacherController.getMyClasses);
 router.route('/my-subjects').get(teacherController.getMySubjects);
 
 /**
+ * @route   GET /api/teacher/rooms
+ * @desc    Get all available rooms
+ * @access  Private (Teacher)
+ */
+router.route('/rooms').get(teacherController.getAllRooms);
+
+/**
  * @route   GET /api/teacher/check-attendance/:classId/:subjectId/:roomId
  * @desc    Takes a snapshot, runs ML, and returns a preview for teacher review
  * @access  Private (Teacher)
