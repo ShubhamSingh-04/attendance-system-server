@@ -220,9 +220,11 @@ export const updateStudentById = async (studentId, updateData) => {
   const {
     name,
     classCode,
+    rollNo,
     semester,
     username,
     email,
+    password,
     phoneNumber,
     imageFilename, // This will be null if no new file is uploaded
   } = updateData;
@@ -268,17 +270,46 @@ export const updateStudentById = async (studentId, updateData) => {
     user.username = username;
   }
 
+  // 2b. Update password if provided and not empty
+  if (password && password.trim()) {
+    user.password = password; // Pre-save hook in User model will hash it
+  }
+
   // 3. Update Class if provided
-  if (classCode && semester) {
-    const studentClass = await Class.findOne({ classCode, semester });
+  // If classCode is provided, look up the class with semester if available.
+  if (classCode) {
+    const classQuery = { classCode };
+    if (semester) {
+      classQuery.semester = semester;
+    }
+    const studentClass = await Class.findOne(classQuery);
     if (!studentClass) {
       const error = new Error(
-        `Class with code ${classCode} and semester ${semester} not found.`
+        `Class with code ${classCode}${
+          semester ? ` and semester ${semester}` : ''
+        } not found.`
       );
       error.statusCode = 404;
       throw error;
     }
     student.class = studentClass._id;
+  }
+
+  // 3b. Update rollNo if provided
+  if (rollNo) {
+    // Check if another student already has this rollNo
+    const existingRollNo = await Student.findOne({
+      rollNo,
+      _id: { $ne: studentId },
+    });
+    if (existingRollNo) {
+      const error = new Error(
+        'This Roll No is already taken by another student.'
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+    student.rollNo = rollNo;
   }
 
   // 4. Update photo/embeddings if a new file was provided

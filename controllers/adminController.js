@@ -570,12 +570,12 @@ export const updateStudent = asyncHandler(async (req, res) => {
   const {
     name,
     classCode,
+    rollNo,
     semester,
     username,
     email,
+    password,
     phoneNumber,
-    // Note: We need rollNo in the body for the middleware to work
-    rollNo,
   } = req.body;
 
   // Check if a new file was uploaded
@@ -588,9 +588,11 @@ export const updateStudent = asyncHandler(async (req, res) => {
       {
         name,
         classCode,
+        rollNo,
         semester,
         username,
         email,
+        password, // Pass password (can be empty/null to skip update)
         phoneNumber,
         imageFilename, // Pass the filename (or null) to the service
       }
