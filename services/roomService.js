@@ -20,7 +20,11 @@ const countRooms = async () => {
  * Implements manual transaction/rollback.
  */
 const addRoom = async (roomData) => {
-  const { name, description, cameras } = roomData;
+  // Log incoming payload for debugging
+  console.log('[roomService] addRoom called with:', JSON.stringify(roomData));
+
+  // Accept either `cameras` (array) or `camera` (single object) from the client
+  const { name, description, cameras, camera } = roomData;
 
   // --- 1. Create Room ---
   const newRoom = new Room({
@@ -40,8 +44,21 @@ const addRoom = async (roomData) => {
     savedRoom = await newRoom.save();
 
     // --- 2. Create Cameras (if provided) ---
+    // Normalize camera input: prefer `cameras` array but accept single `camera` object
+    let camerasToCreate = [];
     if (cameras && Array.isArray(cameras) && cameras.length > 0) {
-      for (const camData of cameras) {
+      camerasToCreate = cameras;
+    } else if (camera && typeof camera === 'object' && !Array.isArray(camera)) {
+      camerasToCreate = [camera];
+    }
+
+    if (camerasToCreate && camerasToCreate.length > 0) {
+      for (const camData of camerasToCreate) {
+        console.log(
+          '[roomService] creating camera for room',
+          savedRoom._id,
+          camData
+        );
         // Basic validation for camera data
         if (!camData.cameraId || !camData.cameraAccessLink) {
           throw new Error(
